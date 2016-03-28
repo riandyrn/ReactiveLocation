@@ -14,59 +14,59 @@ import android.util.Log;
 /**
  * Created by riandyrn on 3/27/16.
  */
-public class MainPresenter implements LocationListener{
+public class MainPresenter {
 
     private MainActivity activity;
-    private LocationManager locationManager;
     private AlertDialog gpsDialog;
 
-    private boolean isAttemptUpdate = false;
+    private boolean isUpdateAttempted = false;
 
     public MainPresenter(MainActivity activity) {
         this.activity = activity;
-        locationManager = (LocationManager) activity.getSystemService(Context.LOCATION_SERVICE);
     }
 
     public void startListeningLocationUpdates() {
-        isAttemptUpdate = true;
-        if(locationManager.isProviderEnabled(locationManager.GPS_PROVIDER)) {
-            activity.setTextView("Start listening updates...");
-            locationManager.requestLocationUpdates(locationManager.GPS_PROVIDER, 0, 0, this);
+        if(isGPSEnabled()) {
+            activity.setTextView("Listening location updates...");
+            activity.startService(new Intent(activity, LocationService.class));
         } else {
+            isUpdateAttempted = true;
             showGPSDialog();
         }
     }
 
     public void stopListeningLocationUpdates() {
-        activity.setTextView("Not listening to location update...");
-        locationManager.removeUpdates(this);
+        activity.setTextView("Not listening location updates...");
+        activity.stopService(new Intent(activity, LocationService.class));
     }
 
-    @Override
-    public void onLocationChanged(Location location) {
-        activity.setTextView(location.toString());
-        Log.d(MainPresenter.class.getSimpleName(), location.toString());
+    public void handleBroadcast(Context context, Intent intent) {
+        String type = intent.getExtras().getString("broadcastType", "");
+        Log.d(this.getClass().getSimpleName(), "handleBroadcast: " + type);
+
+        switch (type){
+            case LocationService.BROADCAST_TYPE_LOCATION_UPDATE:
+                Location location = LocationService.getInstance().getLocation();
+                activity.setTextView(location.toString());
+                break;
+            case LocationService.BROADCAST_TYPE_GPS_DISABLED:
+                showGPSDialog();
+                break;
+            case LocationService.BROADCAST_TYPE_GPS_ENABLED:
+                dismissGPSDialog();
+                break;
+        }
     }
 
-    @Override
-    public void onStatusChanged(String provider, int status, Bundle extras) {
-
-    }
-
-    @Override
-    public void onProviderEnabled(String provider) {
+    private void dismissGPSDialog() {
         if(gpsDialog != null) {
             gpsDialog.dismiss();
             gpsDialog = null;
         }
     }
 
-    @Override
-    public void onProviderDisabled(String provider) {
-        showGPSDialog();
-    }
-
     private void showGPSDialog() {
+        dismissGPSDialog();
         gpsDialog = createGPSDialog();
         gpsDialog.setCancelable(false);
         gpsDialog.show();
@@ -75,7 +75,7 @@ public class MainPresenter implements LocationListener{
     private AlertDialog createGPSDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(activity);
         builder.setTitle("Enable GPS")
-                .setMessage("Please enable your GPS")
+                .setMessage("Please enabled your GPS")
                 .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -88,14 +88,21 @@ public class MainPresenter implements LocationListener{
 
     public void handleActivityResult(int requestCode, int resultCode, Intent data) {
         if(requestCode == 10) {
-            if(locationManager.isProviderEnabled(locationManager.GPS_PROVIDER)) {
-                if(isAttemptUpdate) {
+            if(isGPSEnabled()) {
+                dismissGPSDialog();
+
+                if(isUpdateAttempted){
                     startListeningLocationUpdates();
-                    isAttemptUpdate = false;
+                    isUpdateAttempted = false;
                 }
             } else {
                 showGPSDialog();
             }
         }
+    }
+
+    private boolean isGPSEnabled() {
+        LocationManager locationManager = (LocationManager) activity.getSystemService(Context.LOCATION_SERVICE);
+        return locationManager.isProviderEnabled(locationManager.GPS_PROVIDER);
     }
 }
