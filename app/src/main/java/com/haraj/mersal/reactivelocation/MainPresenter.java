@@ -1,125 +1,55 @@
 package com.haraj.mersal.reactivelocation;
 
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
-import android.media.RingtoneManager;
-import android.net.Uri;
-import android.os.Bundle;
-import android.provider.Settings;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.TaskStackBuilder;
-import android.support.v7.app.AlertDialog;
-import android.util.Log;
 
 /**
  * Created by riandyrn on 3/27/16.
  */
-public class MainPresenter {
+public class MainPresenter implements LocationServiceListener {
 
     private MainActivity activity;
-    private AlertDialog gpsDialog;
+    private LocationServiceReceiver locationServiceReceiver;
 
     private boolean isUpdateAttempted = false;
 
     public MainPresenter(MainActivity activity) {
         this.activity = activity;
+        locationServiceReceiver = new LocationServiceReceiver(activity, this);
     }
 
     public void startListeningLocationUpdates() {
-        if(isGPSEnabled()) {
-            activity.setTextView("Listening location updates...");
-            activity.startService(new Intent(activity, LocationService.class));
-        } else {
+        if(!isUpdateAttempted)
             isUpdateAttempted = true;
-            showGPSDialog();
-        }
+
+        locationServiceReceiver.registerReceiver();
+        activity.startService(new Intent(activity, LocationService.class));
     }
 
     public void stopListeningLocationUpdates() {
         activity.setTextView("Not listening location updates...");
         activity.stopService(new Intent(activity, LocationService.class));
+        locationServiceReceiver.unregisterReceiver();
     }
 
-    public void handleBroadcast(Context context, Intent intent) {
-        String type = intent.getExtras().getString("broadcastType", "");
-        Log.d(this.getClass().getSimpleName(), "handleBroadcast: " + type);
-
-        switch (type){
-            case LocationService.BROADCAST_TYPE_LOCATION_UPDATE:
-                Location location = LocationService.getInstance().getLocation();
-                activity.setTextView(location.toString());
-                break;
-            case LocationService.BROADCAST_TYPE_GPS_DISABLED:
-                showGPSDialog();
-                break;
-            case LocationService.BROADCAST_TYPE_GPS_ENABLED:
-                dismissGPSDialog();
-                break;
+    public void handleOnResultGPSEnabled() {
+        if(isUpdateAttempted) {
+            startListeningLocationUpdates();
+            isUpdateAttempted = false;
         }
     }
 
-    private void dismissGPSDialog() {
-        if(gpsDialog != null) {
-            gpsDialog.dismiss();
-            gpsDialog = null;
+    @Override
+    public void onLocationUpdated(Location location) {
+        activity.setTextView(location.toString());
+    }
+
+    @Override
+    public void onServiceExecuted(boolean isRunning) {
+        if(isRunning) {
+            activity.setTextView("Listening to location updates...");
+        } else {
+            stopListeningLocationUpdates();
         }
-    }
-
-    private void showGPSDialog() {
-
-        /*
-        if(LocationService.getInstance() != null)
-            LocationService.getInstance().dismissGPSNotification();*/
-
-        dismissGPSDialog();
-
-        gpsDialog = createGPSDialog();
-        gpsDialog.setCancelable(false);
-        gpsDialog.show();
-    }
-
-    private AlertDialog createGPSDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
-        builder.setTitle("Enable GPS")
-                .setMessage("Please enabled your GPS")
-                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        activity.startActivityForResult(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS), 10);
-                    }
-                });
-
-        return builder.create();
-    }
-
-    public void handleActivityResult(int requestCode, int resultCode, Intent data) {
-        if(requestCode == 10) {
-            if(isGPSEnabled()) {
-                dismissGPSDialog();
-
-                if(isUpdateAttempted){
-                    startListeningLocationUpdates();
-                    isUpdateAttempted = false;
-                }
-            } else {
-                showGPSDialog();
-            }
-        }
-    }
-
-    private boolean isGPSEnabled() {
-        LocationManager locationManager = (LocationManager) activity.getSystemService(Context.LOCATION_SERVICE);
-        return locationManager.isProviderEnabled(locationManager.GPS_PROVIDER);
-    }
-
-    public void setIsOnForeground(boolean isOnForeground) {
-        PreferenceProvider.setIsOnForeground(activity, isOnForeground);
     }
 }

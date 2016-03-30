@@ -41,7 +41,7 @@ public class LocationEngine {
         if(locationManager.isProviderEnabled(locationManager.GPS_PROVIDER)) {
             locationManager.requestLocationUpdates(locationManager.GPS_PROVIDER, 2 * 1000, 0, locationService);
         } else {
-            sendBroadcast(LocationService.BROADCAST_TYPE_GPS_DISABLED);
+            sendGPSStatusBroadcast(false);
         }
     }
 
@@ -50,7 +50,15 @@ public class LocationEngine {
     }
 
     public int handleStartCommand(Intent intent, int flags, int startId) {
-        startListeningLocationUpdates();
+        if(isGPSEnabled()) {
+            startListeningLocationUpdates();
+            sendServiceStatusBroadcast(true);
+        } else {
+            sendGPSStatusBroadcast(false);
+            sendServiceStatusBroadcast(false);
+            locationService.stopSelf();
+        }
+
         return locationService.START_REDELIVER_INTENT;
     }
 
@@ -61,25 +69,37 @@ public class LocationEngine {
     public void handleOnLocationChanged(Location location) {
         Log.d(this.getClass().getSimpleName(), "location: " + location.toString());
         currentBestLocation = location;
-        sendBroadcast(LocationService.BROADCAST_TYPE_LOCATION_UPDATE);
+        sendLocationBroadcast();
     }
 
     public void handleOnProviderDisabled(String provider) {
         if(!isOnForeground())
             showGPSNotification();
 
-        sendBroadcast(LocationService.BROADCAST_TYPE_GPS_DISABLED);
+        sendGPSStatusBroadcast(false);
     }
 
     public void handleOnProviderEnabled(String provider) {
         startListeningLocationUpdates();
-        sendBroadcast(LocationService.BROADCAST_TYPE_GPS_ENABLED);
+        sendGPSStatusBroadcast(true);
     }
 
-    private void sendBroadcast(String typePayload) {
-        Intent intent = new Intent(LocationService.BROADCAST_LOCATION);
-        intent.putExtra("broadcastType", typePayload);
+    private void sendGPSStatusBroadcast(boolean isEnabled) {
+        Intent intent = new Intent(LocationService.BROADCAST_GPS_STATUS);
+        intent.putExtra("isEnabled", isEnabled);
 
+        LocalBroadcastManager.getInstance(locationService).sendBroadcast(intent);
+    }
+
+    private void sendServiceStatusBroadcast(boolean isRunning) {
+        Intent intent = new Intent(LocationService.BROADCAST_SERVICE_STATUS);
+        intent.putExtra("isRunning", isRunning);
+
+        LocalBroadcastManager.getInstance(locationService).sendBroadcast(intent);
+    }
+
+    private void sendLocationBroadcast() {
+        Intent intent = new Intent(LocationService.BROADCAST_LOCATION);
         LocalBroadcastManager.getInstance(locationService).sendBroadcast(intent);
     }
 
@@ -96,6 +116,8 @@ public class LocationEngine {
     private Notification createGPSNotification() {
 
         Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        Intent notifyIntent = new Intent(locationService, MainActivity.class);
+        PendingIntent notifyPendingIntent = PendingIntent.getActivity(locationService, 0, notifyIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(locationService)
                 .setContentTitle("App Require Attention")
@@ -103,15 +125,8 @@ public class LocationEngine {
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setAutoCancel(true)
                 .setSound(soundUri)
-                .setOngoing(true);
-
-        //Intent notifyIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-        Intent notifyIntent = new Intent(locationService, MainActivity.class);
-
-        //notifyIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        PendingIntent notifyPendingIntent = PendingIntent.getActivity(locationService, 0, notifyIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        builder.setContentIntent(notifyPendingIntent);
+                .setOngoing(true)
+                .setContentIntent(notifyPendingIntent);
 
         return builder.build();
     }
@@ -120,4 +135,8 @@ public class LocationEngine {
         return PreferenceProvider.isOnForeground(locationService);
     }
 
+    private boolean isGPSEnabled() {
+        LocationManager locationManager = (LocationManager) locationService.getSystemService(Context.LOCATION_SERVICE);
+        return locationManager.isProviderEnabled(locationManager.GPS_PROVIDER);
+    }
 }

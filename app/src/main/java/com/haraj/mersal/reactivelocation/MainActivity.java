@@ -14,15 +14,13 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends BaseActivity {
 
     private TextView textView;
     private Button btnStart;
     private Button btnStop;
-    private Button btnNext;
 
     private MainPresenter presenter;
-    private BroadcastReceiver broadcastReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,9 +34,7 @@ public class MainActivity extends AppCompatActivity {
         textView = (TextView) findViewById(R.id.text_view);
         btnStart = (Button) findViewById(R.id.btn_start);
         btnStop = (Button) findViewById(R.id.btn_stop);
-        btnNext = (Button) findViewById(R.id.btn_next);
 
-        final Activity activity = this;
         btnStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -52,73 +48,35 @@ public class MainActivity extends AppCompatActivity {
                 presenter.stopListeningLocationUpdates();
             }
         });
-
-        //final Activity activity = this;
-        btnNext.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(activity, NextActivity.class));
-                finish();
-            }
-        });
-
-        broadcastReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                Log.d(this.getClass().getSimpleName(), "Context: " + context.toString());
-                presenter.handleBroadcast(context, intent);
-            }
-        };
-
-        registerReceiver();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-
-        presenter.setIsOnForeground(true);
-        if(LocationService.getInstance() != null)
-            LocationService.getInstance().dismissGPSNotification();
-
         Log.d(this.getClass().getSimpleName(), "onResume called");
     }
 
     @Override
     protected void onPause() {
-        presenter.setIsOnForeground(false);
         Log.d(this.getClass().getSimpleName(), "onPause called");
-
         super.onPause();
     }
 
     @Override
     protected void onDestroy() {
         Log.d(this.getClass().getSimpleName(), "onDestroy called");
-        unregisterReceiver();
         presenter.stopListeningLocationUpdates();
         super.onDestroy();
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        presenter.handleActivityResult(requestCode, resultCode, data);
-    }
 
     public void setTextView(String text) {
         textView.setText(text);
     }
 
-    private void registerReceiver() {
-        LocalBroadcastManager
-                .getInstance(this)
-                .registerReceiver(broadcastReceiver, new IntentFilter(LocationService.BROADCAST_LOCATION));
+    @Override
+    public void onResultGPSEnabled() {
+        super.onResultGPSEnabled();
+        presenter.handleOnResultGPSEnabled();
     }
-
-    private void unregisterReceiver() {
-        LocalBroadcastManager
-                .getInstance(this)
-                .unregisterReceiver(broadcastReceiver);
-    }
-
 }

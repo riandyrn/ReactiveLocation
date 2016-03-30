@@ -14,6 +14,8 @@ public class LocationService extends Service implements LocationListener {
     private static LocationService service;
 
     public static final String BROADCAST_LOCATION = "broadcastLocation";
+    public static final String BROADCAST_GPS_STATUS = "broadcastGPSStatus";
+    public static final String BROADCAST_SERVICE_STATUS = "broadcastServiceStatus";
 
     public static final String BROADCAST_TYPE_LOCATION_UPDATE = "locationUpdate";
     public static final String BROADCAST_TYPE_GPS_DISABLED = "gpsDisabled";
