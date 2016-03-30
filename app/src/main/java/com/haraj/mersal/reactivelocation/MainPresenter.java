@@ -1,13 +1,20 @@
 package com.haraj.mersal.reactivelocation;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.TaskStackBuilder;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 
@@ -66,7 +73,13 @@ public class MainPresenter {
     }
 
     private void showGPSDialog() {
+
+        /*
+        if(LocationService.getInstance() != null)
+            LocationService.getInstance().dismissGPSNotification();*/
+
         dismissGPSDialog();
+
         gpsDialog = createGPSDialog();
         gpsDialog.setCancelable(false);
         gpsDialog.show();
@@ -104,5 +117,9 @@ public class MainPresenter {
     private boolean isGPSEnabled() {
         LocationManager locationManager = (LocationManager) activity.getSystemService(Context.LOCATION_SERVICE);
         return locationManager.isProviderEnabled(locationManager.GPS_PROVIDER);
+    }
+
+    public void setIsOnForeground(boolean isOnForeground) {
+        PreferenceProvider.setIsOnForeground(activity, isOnForeground);
     }
 }

@@ -76,13 +76,20 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
+        presenter.setIsOnForeground(true);
+        if(LocationService.getInstance() != null)
+            LocationService.getInstance().dismissGPSNotification();
+
         Log.d(this.getClass().getSimpleName(), "onResume called");
     }
 
     @Override
     protected void onPause() {
-        super.onPause();
+        presenter.setIsOnForeground(false);
         Log.d(this.getClass().getSimpleName(), "onPause called");
+
+        super.onPause();
     }
 
     @Override

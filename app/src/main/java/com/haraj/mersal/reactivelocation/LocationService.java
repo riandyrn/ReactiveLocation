@@ -74,4 +74,8 @@ public class LocationService extends Service implements LocationListener {
     public Location getLocation() {
         return locationEngine.getLocation();
     }
+
+    public void dismissGPSNotification() {
+        locationEngine.dismissGPSNotification();
+    }
 }
