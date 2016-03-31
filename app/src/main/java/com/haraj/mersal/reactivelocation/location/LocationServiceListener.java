@@ -1,4 +1,4 @@
-package com.haraj.mersal.reactivelocation;
+package com.haraj.mersal.reactivelocation.location;
 
 import android.location.Location;
 

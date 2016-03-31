@@ -1,12 +1,13 @@
-package com.haraj.mersal.reactivelocation;
+package com.haraj.mersal.reactivelocation.location;
 
-import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.location.Location;
 import android.support.v4.content.LocalBroadcastManager;
+
+import com.haraj.mersal.reactivelocation.base.BaseActivity;
 
 /**
  * Created by riandyrn on 3/30/16.

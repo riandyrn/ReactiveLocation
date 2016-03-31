@@ -1,24 +1,21 @@
 package com.haraj.mersal.reactivelocation;
 
 import android.app.Activity;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
+
+import com.haraj.mersal.reactivelocation.base.BaseActivity;
 
 public class MainActivity extends BaseActivity {
 
     private TextView textView;
     private Button btnStart;
     private Button btnStop;
+    private Button btnNext;
 
     private MainPresenter presenter;
 
@@ -34,6 +31,7 @@ public class MainActivity extends BaseActivity {
         textView = (TextView) findViewById(R.id.text_view);
         btnStart = (Button) findViewById(R.id.btn_start);
         btnStop = (Button) findViewById(R.id.btn_stop);
+        btnNext = (Button) findViewById(R.id.btn_next);
 
         btnStart.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -46,6 +44,14 @@ public class MainActivity extends BaseActivity {
             @Override
             public void onClick(View v) {
                 presenter.stopListeningLocationUpdates();
+            }
+        });
+
+        final Activity activity = this;
+        btnNext.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(activity, NextActivity.class));
             }
         });
     }

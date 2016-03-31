@@ -1,4 +1,4 @@
-package com.haraj.mersal.reactivelocation;
+package com.haraj.mersal.reactivelocation.location;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -9,11 +9,13 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.media.RingtoneManager;
 import android.net.Uri;
-import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.TaskStackBuilder;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+
+import com.haraj.mersal.reactivelocation.MainActivity;
+import com.haraj.mersal.reactivelocation.R;
+import com.haraj.mersal.reactivelocation.tools.PreferenceProvider;
 
 /**
  * Created by riandyrn on 3/28/16.
@@ -36,7 +38,7 @@ public class LocationEngine {
     }
 
     private void startListeningLocationUpdates() {
-        stopListeningLocationUpdates();
+        stopListeningLocationUpdates(); // make sure only one location listener is active
 
         if(locationManager.isProviderEnabled(locationManager.GPS_PROVIDER)) {
             locationManager.requestLocationUpdates(locationManager.GPS_PROVIDER, 2 * 1000, 0, locationService);
@@ -80,7 +82,8 @@ public class LocationEngine {
     }
 
     public void handleOnProviderEnabled(String provider) {
-        startListeningLocationUpdates();
+        dismissGPSNotification();
+        //startListeningLocationUpdates();
         sendGPSStatusBroadcast(true);
     }
 
@@ -103,9 +106,11 @@ public class LocationEngine {
         LocalBroadcastManager.getInstance(locationService).sendBroadcast(intent);
     }
 
-    private void showGPSNotification() {
-        NotificationManager notificationManager = (NotificationManager) locationService.getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.notify(10, createGPSNotification());
+    public void showGPSNotification() {
+        if(!isGPSEnabled()) {
+            NotificationManager notificationManager = (NotificationManager) locationService.getSystemService(Context.NOTIFICATION_SERVICE);
+            notificationManager.notify(10, createGPSNotification());
+        }
     }
 
     public void dismissGPSNotification() {
@@ -120,8 +125,8 @@ public class LocationEngine {
         PendingIntent notifyPendingIntent = PendingIntent.getActivity(locationService, 0, notifyIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(locationService)
-                .setContentTitle("App Require Attention")
-                .setContentText("Please tap to open the app")
+                .setContentTitle("Enable GPS")
+                .setContentText("Tap for further details")
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setAutoCancel(true)
                 .setSound(soundUri)

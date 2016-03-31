@@ -1,9 +1,10 @@
-package com.haraj.mersal.reactivelocation;
+package com.haraj.mersal.reactivelocation.base;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.location.LocationManager;
 import android.provider.Settings;
 import android.support.v7.app.AlertDialog;
 
@@ -39,14 +40,14 @@ public class GPSStatusReceiver extends BroadcastReceiver {
         }
     }
 
-    public void dismissGPSDialog() {
+    private void dismissGPSDialog() {
         if(gpsDialog != null) {
             gpsDialog.dismiss();
             gpsDialog = null;
         }
     }
 
-    public void showGPSDialog() {
+    private void showGPSDialog() {
         dismissGPSDialog();
 
         gpsDialog = createGPSDialog();
@@ -66,5 +67,21 @@ public class GPSStatusReceiver extends BroadcastReceiver {
                 });
 
         return builder.create();
+    }
+
+    public void handleActivityResult(int requestCode, int resultCode, Intent data, ActivityResultGPSEnabledCallback activityResultGpsEnabledCallback) {
+        if(requestCode == 10) {
+            if(isGPSEnabled()) {
+                dismissGPSDialog();
+                activityResultGpsEnabledCallback.onResultGPSEnabled();
+            } else {
+                showGPSDialog();
+            }
+        }
+    }
+
+    private boolean isGPSEnabled() {
+        LocationManager locationManager = (LocationManager) activity.getSystemService(Context.LOCATION_SERVICE);
+        return locationManager.isProviderEnabled(locationManager.GPS_PROVIDER);
     }
 }

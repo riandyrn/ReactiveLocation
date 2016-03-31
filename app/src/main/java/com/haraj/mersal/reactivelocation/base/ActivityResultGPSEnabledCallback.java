@@ -1,4 +1,4 @@
-package com.haraj.mersal.reactivelocation;
+package com.haraj.mersal.reactivelocation.base;
 
 /**
  * Created by riandyrn on 3/30/16.

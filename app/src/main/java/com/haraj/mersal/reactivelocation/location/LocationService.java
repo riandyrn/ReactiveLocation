@@ -1,4 +1,4 @@
-package com.haraj.mersal.reactivelocation;
+package com.haraj.mersal.reactivelocation.location;
 
 import android.app.Service;
 import android.content.Intent;
@@ -6,8 +6,6 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.util.Log;
-import android.widget.Toast;
 
 public class LocationService extends Service implements LocationListener {
 
@@ -75,6 +73,10 @@ public class LocationService extends Service implements LocationListener {
 
     public Location getLocation() {
         return locationEngine.getLocation();
+    }
+
+    public void showGPSNotification() {
+        locationEngine.showGPSNotification();
     }
 
     public void dismissGPSNotification() {

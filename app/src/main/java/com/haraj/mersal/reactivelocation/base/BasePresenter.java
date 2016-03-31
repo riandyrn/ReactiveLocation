@@ -1,10 +1,11 @@
-package com.haraj.mersal.reactivelocation;
+package com.haraj.mersal.reactivelocation.base;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.location.LocationManager;
 import android.support.v4.content.LocalBroadcastManager;
+
+import com.haraj.mersal.reactivelocation.location.LocationService;
+import com.haraj.mersal.reactivelocation.tools.PreferenceProvider;
 
 /**
  * Created by riandyrn on 3/30/16.
@@ -36,18 +37,18 @@ public class BasePresenter {
     }
 
     public void handleActivityResult(int requestCode, int resultCode, Intent data, ActivityResultGPSEnabledCallback activityResultGpsEnabledCallback) {
-        if(requestCode == 10) {
-            if(isGPSEnabled()) {
-                gpsStatusReceiver.dismissGPSDialog();
-                activityResultGpsEnabledCallback.onResultGPSEnabled();
-            } else {
-                gpsStatusReceiver.showGPSDialog();
-            }
+        gpsStatusReceiver.handleActivityResult(requestCode, resultCode, data, activityResultGpsEnabledCallback);
+    }
+
+    public void showGPSNotificationIfNeeded() {
+        if(LocationService.getInstance() != null) {
+            LocationService.getInstance().showGPSNotification();
         }
     }
 
-    private boolean isGPSEnabled() {
-        LocationManager locationManager = (LocationManager) activity.getSystemService(Context.LOCATION_SERVICE);
-        return locationManager.isProviderEnabled(locationManager.GPS_PROVIDER);
+    public void dismissGPSNotificationIfAny() {
+        if(LocationService.getInstance() != null) {
+            LocationService.getInstance().dismissGPSNotification();
+        }
     }
 }

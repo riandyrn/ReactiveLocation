@@ -1,4 +1,4 @@
-package com.haraj.mersal.reactivelocation;
+package com.haraj.mersal.reactivelocation.tools;
 
 import android.content.Context;
 import android.content.SharedPreferences;

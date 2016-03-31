@@ -1,8 +1,10 @@
-package com.haraj.mersal.reactivelocation;
+package com.haraj.mersal.reactivelocation.base;
 
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+
+import com.haraj.mersal.reactivelocation.location.LocationService;
 
 /**
  * Created by riandyrn on 3/30/16.
@@ -28,6 +30,7 @@ public class BaseActivity extends AppCompatActivity implements ActivityResultGPS
     protected void onResume() {
         super.onResume();
         presenter.setIsOnForeground(true);
+        presenter.dismissGPSNotificationIfAny();
     }
 
     @Override
